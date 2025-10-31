@@ -1,0 +1,47 @@
+name: Deploy Lambda para AWS
+# Aciona este workflow em qualquer push para a branch 'main'
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Baixa o código do repositório
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. Configura o ambiente Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      # 3. Constroi o "fat JAR" com o Maven
+      - name: Build with Maven
+        run: mvn package
+      
+      # 4. Configura as credenciais da AWS usando os Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # MUDE A REGIÃO para a mesma da sua Lambda
+          aws-region: us-east-1
+      
+      # 5. Faz o deploy do JAR para a AWS Lambda
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name java-thumbnail-generator \
+            --zip-file fileb://target/lambda-thumbnailer-1.0-SNAPSHOT.jar \
+            --region us-east-1 
+          
+          # NOTAS IMPORTANTES:
+          # --function-name: Deve ser o nome exato da sua Lambda.
+          # --zip-file: fileb:// indica um arquivo binário. O caminho 
+          #             deve ser o nome exato do JAR gerado pelo 'mvn package'.
+          #             (Verifique na sua pasta 'target/' local).
