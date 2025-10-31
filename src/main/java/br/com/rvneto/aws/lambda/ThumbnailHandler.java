@@ -29,6 +29,8 @@ public class ThumbnailHandler implements RequestHandler<S3Event, String> {
     public String handleRequest(S3Event s3event, Context context) {
         LambdaLogger logger = context.getLogger();
         
+        logger.log("DEPLOY AUTOMATICO FUNCIONOU! Nova versão.");
+        
         try {
             if (s3event.getRecords().isEmpty()) {
                 logger.log("EVENTO S3 vazio, sem records.");
